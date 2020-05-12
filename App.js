@@ -24,8 +24,8 @@ import TestDemo from "./src/test";
 const App = () => {
   return (
     <View style={{flex:1}}>
-      <SortDemo />
-      {/*<Solitaire />*/}
+      {/*<SortDemo />*/}
+      <Solitaire />
       {/*<TestDemo />*/}
     </View>
   )
