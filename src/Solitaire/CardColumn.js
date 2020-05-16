@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
 import PropTypes from 'prop-types';
 import PlayingCard,{CardSuit,CardType,CardColor} from "./PlayingCard";
 import RenderCard from "./RenderCard";
+import ColumnNode from "./ColumnNode";
 
 import { Droppable } from "../components/Draggable";
 
@@ -10,6 +11,7 @@ const windowWidth = Dimensions.get('window').width;
 
 const itemWidth = (windowWidth - 7*10 ) / 7 ;
 const itemHeight = itemWidth/0.7;
+const offsetTop = itemHeight * 0.4;
 
 export default class CardColumn extends React.Component{
 	static propTypes = {
@@ -27,7 +29,8 @@ export default class CardColumn extends React.Component{
 
 	onWillAccept(value){
 		let { list } = this.props;
-		let { card: draggedCard } = value;
+		let { cards,columnIndex } = value;
+		let draggedCard = cards[0];
 		if(list.length === 0){
 			return true;
 		}
@@ -43,7 +46,7 @@ export default class CardColumn extends React.Component{
 		let {list,columnIndex,onCardsAdded} = this.props;
 		let columnStyle = {
 			width:itemWidth,
-			height:200,
+			height: itemHeight + offsetTop * (list.length-1),
 		}
 		return (
 			<Droppable
@@ -52,20 +55,7 @@ export default class CardColumn extends React.Component{
 				onAccept = {onCardsAdded}
 				style={[styles.column,columnStyle]}
 			>
-				{
-					list.map((card,index) => {
-						return (
-							<RenderCard 
-								columnIndex={columnIndex}
-								playingCard={card} 
-								itemWidth={itemWidth} 
-								itemHeight={itemHeight} 
-								index={index} 
-								key={card.cardType + card.cardSuit}
-							/>
-						)
-					})
-				}
+				<ColumnNode cards={list} columnIndex={columnIndex} />
 			</Droppable>
 		)
 	}

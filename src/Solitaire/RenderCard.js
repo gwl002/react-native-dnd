@@ -3,8 +3,6 @@ import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native"; 
 import PropTypes from 'prop-types';
 
-import { Draggable } from "../components/Draggable";
-
 const Images = {
 	back: require("./images/back_side.png"),
 	spades: require("./images/spades.png"),
@@ -22,7 +20,6 @@ export default class RenderCard extends React.Component{
 
 	constructor(props) {
 	  super(props);
-	  this.state = {};
 	}
 
 	getImageSource(){
@@ -61,28 +58,14 @@ export default class RenderCard extends React.Component{
 		)
 	}
 
-	renderCard(){
+	render(){
 		const { playingCard } = this.props;
 		const { faceUp } = playingCard;
-
 		if(!faceUp){
 			return this.buildFaceDownCard()
 		}else{
 			return this.buildFaceUpCard()
 		}
-	}
-
-	render(){
-		let {index,itemWidth,playingCard} = this.props;
-		let columnIndex = this.props.columnIndex || 0
-		return (
-			<Draggable
-				value={{card:playingCard,fromIndex:columnIndex}}
-				style={{position:"absolute",top:index*itemWidth*0.5}}
-			>
-				{this.renderCard()}
-			</Draggable>
-		)		
 	}
 }
 
@@ -93,6 +76,13 @@ const styles = StyleSheet.create({
 		backgroundColor:"white",
 		borderRadius:4,
 		justifyContent:"space-between",
+		shadowColor: "#000",
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.34,
+		shadowRadius: 2,
 	},
 	cardRow:{
 		flexDirection:"row",

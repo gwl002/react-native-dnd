@@ -7,6 +7,8 @@ import CardColumn from "./CardColumn";
 
 import PlayingCard,{CardSuit,CardType,CardColor} from "./PlayingCard";
 
+import { Draggable } from "../components/Draggable";
+
 const Images = {
 	back: require("./images/back_side.png"),
 	spades: require("./images/spades.png"),
@@ -160,18 +162,44 @@ export default class Game extends React.Component{
 		this.setState(newState);
 	}
 
+	changeOpenCard(){
+		let { cardDeckOpened, cardDeckClosed } = this.state;
+		let newCardOpened = [];
+		let newCardClosed = [];
+		if(cardDeckClosed.length>0){
+			let oldCard = cardDeckOpened[cardDeckOpened.length-1];
+			let newCard = cardDeckClosed[cardDeckClosed.length-1];
+			newCard.faceUp = true;
+			newCard.opened = true;
+			oldCard.faceUp = false;
+			oldCard.opened = false;
+			newCardOpened = [newCard];
+			newCardClosed = [oldCard,...cardDeckClosed.slice(0,-1)];
+		}else{
+			// newCardOpened = cardDeckOpened;
+		}
+		this.setState({
+			cardDeckOpened: newCardOpened,
+			cardDeckClosed: newCardClosed
+		})
+	}
+
 	renderClosedDeck(){
 		let {cardDeckClosed} = this.state;
 		return (
 			<View style={{width:itemWidth,height:itemHeight}}>
 				{
 					cardDeckClosed.length !== 0 ? (
-						<RenderCard 
-							playingCard={cardDeckClosed[cardDeckClosed.length-1]}
-							itemWidth={itemWidth}
-							itemHeight={itemHeight}
-							index={0}
-						/>
+						<TouchableOpacity
+							onPress={this.changeOpenCard.bind(this)}
+						>
+							<RenderCard 
+								playingCard={cardDeckClosed[cardDeckClosed.length-1]}
+								itemWidth={itemWidth}
+								itemHeight={itemHeight}
+								index={0}
+							/>
+						</TouchableOpacity>
 					):(
 						<View style={{width:itemWidth,height:itemHeight,backgroundColor:"lightblue",opacity:0.5}} />
 					)
@@ -203,12 +231,15 @@ export default class Game extends React.Component{
 			<View style={{width:itemWidth,height:itemHeight}}>
 				{
 					cardDeckOpened.length !== 0 ? (
-						<RenderCard 
-							playingCard={cardDeckOpened[cardDeckOpened.length-1]}
-							itemWidth={itemWidth}
-							itemHeight={itemHeight}
-							index={0}
-						/>
+						<Draggable
+							value={{columnIndex:0,cards:cardDeckOpened.slice(-1)}}
+						>
+							<RenderCard 
+								playingCard={cardDeckOpened[cardDeckOpened.length-1]}
+								itemWidth={itemWidth}
+								itemHeight={itemHeight}
+							/>
+						</Draggable>
 					):(
 						<View style={{width:itemWidth,height:itemHeight,backgroundColor:"lightblue",opacity:0.8}} />
 					)
@@ -233,22 +264,54 @@ export default class Game extends React.Component{
 		)
 	}
 
-	columnAccept(toIndex,value){
-		let { card,fromIndex} = value;
-		console.log(toIndex,fromIndex,card);
+	columnAccept(toIndex,fromIndex,cards){
 		let fromColumn = this.state["cardColumn"+fromIndex];
 		let toColumn = this.state["cardColumn"+toIndex];
-		fromColumn.pop();
+		fromColumn =  fromColumn.slice(0,fromColumn.length-cards.length);
 		if(fromColumn.length>0){
 			let lastFromCard = fromColumn[fromColumn.length-1];
 			lastFromCard.faceUp = true;
 			lastFromCard.opened = true;
 		}
-		toColumn.push(card);
+		toColumn = [...toColumn,...cards];
 		this.setState({
 			["cardColumn"+fromIndex]:fromColumn,
 			["cardColumn"+toIndex]:toColumn
 		})
+	}
+
+	handleOpenDeckChange(toIndex,cards){
+		let toColumn = this.state["cardColumn"+toIndex];
+		toColumn = [...toColumn,...cards];
+		let cardDeckOpened = this.state.cardDeckOpened;
+		let cardDeckClosed = this.state.cardDeckClosed;
+		let newCardClosed = [];
+		let newCardOpended = [];
+		if(cardDeckClosed.length > 0 ){
+			let newCard = cardDeckClosed[cardDeckClosed.length-1];
+			newCardClosed = cardDeckClosed.slice(0,-1);
+			newCardOpended = cardDeckOpened.slice(0,-1);
+			newCardOpended.push(newCard);
+			newCard.opened = true;
+			newCard.faceUp = true;
+		}else{
+			newCardOpended = cardDeckOpened.slice(0,-1);
+		}
+		this.setState({
+			["cardColumn"+toIndex]:toColumn,
+			cardDeckClosed: newCardClosed,
+			cardDeckOpened: newCardOpended
+		})
+	}
+
+	handleCardsAdded(toIndex,value){
+		let { cards,columnIndex:fromIndex} = value;
+		if(fromIndex !== 0){
+			this.columnAccept(toIndex,fromIndex,cards);
+		}else{
+			this.handleOpenDeckChange(toIndex,cards);
+		}
+		
 	}
 
 	render(){
@@ -267,13 +330,13 @@ export default class Game extends React.Component{
 					{this.renderFinalDecks()}
 				</View>
 				<View style={{flex:1,flexDirection:"row",justifyContent:"space-between",marginTop:50}}>
-					<CardColumn list={this.state.cardColumn1} columnIndex={1} onCardsAdded={this.columnAccept.bind(this,1)} />
-					<CardColumn list={this.state.cardColumn2} columnIndex={2} onCardsAdded={this.columnAccept.bind(this,2)} />
-					<CardColumn list={this.state.cardColumn3} columnIndex={3} onCardsAdded={this.columnAccept.bind(this,3)} />
-					<CardColumn list={this.state.cardColumn4} columnIndex={4} onCardsAdded={this.columnAccept.bind(this,4)} />
-					<CardColumn list={this.state.cardColumn5} columnIndex={5} onCardsAdded={this.columnAccept.bind(this,5)} />
-					<CardColumn list={this.state.cardColumn6} columnIndex={6} onCardsAdded={this.columnAccept.bind(this,6)} />
-					<CardColumn list={this.state.cardColumn7} columnIndex={7} onCardsAdded={this.columnAccept.bind(this,7)} />
+					<CardColumn list={this.state.cardColumn1} columnIndex={1} onCardsAdded={this.handleCardsAdded.bind(this,1)} />
+					<CardColumn list={this.state.cardColumn2} columnIndex={2} onCardsAdded={this.handleCardsAdded.bind(this,2)} />
+					<CardColumn list={this.state.cardColumn3} columnIndex={3} onCardsAdded={this.handleCardsAdded.bind(this,3)} />
+					<CardColumn list={this.state.cardColumn4} columnIndex={4} onCardsAdded={this.handleCardsAdded.bind(this,4)} />
+					<CardColumn list={this.state.cardColumn5} columnIndex={5} onCardsAdded={this.handleCardsAdded.bind(this,5)} />
+					<CardColumn list={this.state.cardColumn6} columnIndex={6} onCardsAdded={this.handleCardsAdded.bind(this,6)} />
+					<CardColumn list={this.state.cardColumn7} columnIndex={7} onCardsAdded={this.handleCardsAdded.bind(this,7)} />
 				</View>
 			</SafeAreaView>
 		)
